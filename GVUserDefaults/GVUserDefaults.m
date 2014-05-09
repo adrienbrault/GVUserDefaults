@@ -94,12 +94,18 @@ static void doubleSetter(GVUserDefaults *self, SEL _cmd, double value) {
 
 static id objectGetter(GVUserDefaults *self, SEL _cmd) {
     NSString *key = [self defaultsKeyForSelector:_cmd];
-    return [[NSUserDefaults standardUserDefaults] objectForKey:key];
+    id object = [[NSUserDefaults standardUserDefaults] objectForKey:key];
+    object = [NSKeyedUnarchiver unarchiveObjectWithData:object];
+
+    return object;
 }
 
 static void objectSetter(GVUserDefaults *self, SEL _cmd, id object) {
     NSString *key = [self defaultsKeyForSelector:_cmd];
     if (object) {
+        if ([object conformsToProtocol:@protocol(NSCoding)]) {
+            object = [NSKeyedArchiver archivedDataWithRootObject:object];
+        }
         [[NSUserDefaults standardUserDefaults] setObject:object forKey:key];
     } else {
         [[NSUserDefaults standardUserDefaults] removeObjectForKey:key];
